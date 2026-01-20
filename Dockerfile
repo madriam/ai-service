@@ -6,14 +6,12 @@ WORKDIR /app
 # Install uv for fast dependency management
 RUN pip install uv
 
-# Copy dependency files
-COPY pyproject.toml ./
-
-# Install dependencies
-RUN uv pip install --system -e .
-
-# Copy source code
+# Copy all files needed for build
+COPY pyproject.toml README.md ./
 COPY src/ ./src/
+
+# Install dependencies (not editable mode for production)
+RUN uv pip install --system .
 
 # Set Python path
 ENV PYTHONPATH=/app
