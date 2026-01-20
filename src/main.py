@@ -69,18 +69,12 @@ async def main() -> None:
         # Start Kafka service
         await kafka_service.start()
 
-        # Process messages until shutdown
-        process_task = asyncio.create_task(kafka_service.process_messages())
+        # Process messages - this will run until cancelled
+        # Using direct await instead of create_task to ensure proper execution
+        await kafka_service.process_messages()
 
-        # Wait for shutdown signal
-        await shutdown_event.wait()
-
-        # Cancel processing
-        process_task.cancel()
-        try:
-            await process_task
-        except asyncio.CancelledError:
-            pass
+    except asyncio.CancelledError:
+        logger.info("Processing cancelled")
 
     except Exception as e:
         logger.error("Error in main loop", error=str(e))
