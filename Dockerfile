@@ -3,6 +3,11 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
+# Install system dependencies (snappy for Kafka compression)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libsnappy-dev \
+    && rm -rf /var/lib/apt/lists/*
+
 # Install uv for fast dependency management
 RUN pip install uv
 
