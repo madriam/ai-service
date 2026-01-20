@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ai-service
+  labels:
+    app: ai-service
+    environment: staging
+    managed-by: argocd
+    tenant: tenant-a
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ai-service
+      environment: staging
+  template:
+    metadata:
+      labels:
+        app: ai-service
+        environment: staging
+        managed-by: argocd
+        tenant: tenant-a
+    spec:
+      containers:
+      - name: ai-service
+        image: ghcr.io/madriam/ai-service:latest
+        imagePullPolicy: Always
+        env:
+        - name: KAFKA_BROKERS
+          value: "redpanda.redpanda-shared.svc.cluster.local:9093"
+        - name: KAFKA_CONSUMER_GROUP
+          value: "ai-service"
+        - name: KAFKA_REQUEST_TOPIC
+          value: "ai.request"
+        - name: KAFKA_RESPONSE_TOPIC
+          value: "ai.response"
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: ai-service-secrets
+              key: DATABASE_URL
+        - name: OPENAI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: ai-service-secrets
+              key: OPENAI_API_KEY
+        - name: LOG_LEVEL
+          value: "INFO"
+        resources:
+          limits:
+            cpu: 500m
+            memory: 512Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: false
+          runAsNonRoot: true
+          runAsUser: 65534
+      imagePullSecrets:
+      - name: ghcr-secret
+      securityContext:
+        fsGroup: 65534
