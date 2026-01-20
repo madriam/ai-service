@@ -42,7 +42,6 @@ class KafkaService:
 
         await self.consumer.start()
         await self.producer.start()
-        print("Kafka consumer and producer started", flush=True)
 
         logger.info(
             "Kafka service started",
@@ -88,10 +87,8 @@ class KafkaService:
         registry = get_agent_registry()
 
         logger.info("Starting message processing loop")
-        print("About to enter async for loop over consumer", flush=True)
 
         async for msg in self.consumer:
-            print(f"Received message from Kafka: {msg.offset}", flush=True)
             if not self._running:
                 break
 
