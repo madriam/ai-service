@@ -4,6 +4,7 @@ AI Service - Main entry point.
 A Kafka consumer service that processes AI requests using Agno agents.
 """
 import asyncio
+import logging
 import signal
 import sys
 from src.config import settings
@@ -11,26 +12,30 @@ from src.kafka_service import get_kafka_service
 from src.agents.registry import get_agent_registry
 import structlog
 
+# Configure standard logging first
+logging.basicConfig(
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    level=logging.INFO,
+    stream=sys.stdout,
+)
+
 # Configure structured logging
 structlog.configure(
     processors=[
-        structlog.stdlib.filter_by_level,
-        structlog.stdlib.add_logger_name,
-        structlog.stdlib.add_log_level,
-        structlog.stdlib.PositionalArgumentsFormatter(),
         structlog.processors.TimeStamper(fmt="iso"),
+        structlog.processors.add_log_level,
         structlog.processors.StackInfoRenderer(),
         structlog.processors.format_exc_info,
-        structlog.processors.UnicodeDecoder(),
-        structlog.processors.JSONRenderer() if settings.log_level != "DEBUG" else structlog.dev.ConsoleRenderer(),
+        structlog.dev.ConsoleRenderer(),
     ],
-    wrapper_class=structlog.stdlib.BoundLogger,
+    wrapper_class=structlog.make_filtering_bound_logger(logging.INFO),
     context_class=dict,
-    logger_factory=structlog.stdlib.LoggerFactory(),
+    logger_factory=structlog.PrintLoggerFactory(),
     cache_logger_on_first_use=True,
 )
 
 logger = structlog.get_logger()
+print("AI Service module loaded", flush=True)
 
 
 async def main() -> None:
